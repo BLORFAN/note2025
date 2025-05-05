@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des élèves et notes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        select, table, .buttons {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        table th {
+            background-color: #007BFF;
+            color: white;
+        }
+        table td input {
+            width: 100%;
+            padding: 5px;
+            font-size: 14px;
+        }
+        tr.selected {
+            background-color: rgba(0, 0, 0, 0.1); /* Fond transparent foncé */
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .buttons button {
+            margin: 5px 0;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: #007BFF;
+            color: white;
+            font-size: 14px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sélectionnez un groupe</h1>
+        <select id="groupSelector">
+            <option value="" disabled selected>Choisissez un groupe</option>
+            <option value="ELTV">Élèves de ELTV</option>
+            <option value="1STI2D">Élèves de 1STI2D</option>
+            <option value="TSTI2D">Élèves de TSTI2D</option>
+        </select>
+
+        <div id="studentTableContainer" style="display: none;">
+            <h2 id="groupTitle"></h2>
+            <p>Date de contrôle : <span id="currentDate"></span></p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom de l'élève</th>
+                        <th>Note</th>
+                        <th>Remarques</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody">
+                    <!-- Les lignes des élèves seront générées dynamiquement -->
+                </tbody>
+            </table>
+            <div class="buttons">
+                <button id="resetNotes">Réinitialiser les notes</button>
+                <button id="downloadTxt">Télécharger les notes en TXT</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Dr. Ayman BLORFAN 2025
+    </footer>
+
+    <script>
+        const students = {
+            ELTV: [
+                "ALLAOUA Omar", "ANAJJAR Nidal", "AOUSDI Soufiane", "BAAEV Ikhsan",
+                "BELALOUI Abdelghani", "BOUFERCHA Shahine", "BOUOUDEN Lydia", "COMIOTTO Enzo",
+                "DUDARKAEV Israil", "HADJ Abd Rahouf", "IDRIS Ibrahim", "KHALID HUSSEIN Yusuf",
+                "SAHILI Iliane", "SBAÏ Yanis", "ULLAH Abdul-Rehman", "YOUSFI Anis"
+            ],
+            "1STI2D": [
+                "AHMED Shirav", "BEKADDOURI Abdelkader", "BELKHADIR Asma", "BENLEKEHAL Mohamed",
+                "BENYOUB Wassim", "BOUCHEKENDA Adam", "BOUKROUH Amine", "BOUTGHATA Bilel",
+                "ÇEVIKOGUZ Kerim", "DILOUBENDZE Julien", "DJEDJEMEL Elie", "EL KOUKOUCHI Amin",
+                "EL QALBI Yasmine", "ELOUARIAGHLI Assaad", "ENKHBOLD Aminzurkh", "FOLLY NOTSRON Nelson",
+                "GEGA Albi", "GUELLYVIS Kossi", "HABBAS Adam", "HU Quentin", "KAMOUMI Ilyess",
+                "KAPLAN Kâan", "KHARMAZ Naïm", "KNAB Matthew", "MAGOMEDOV Bilal", "MARFOUCHIN Adam",
+                "MEZNI Wissam", "MIGHIZ Marouane", "RACHIDI RATBI Yosef", "SHINWARI Fahim",
+                "TING Daniel", "VEPKHVADZE Giorgi", "WARHOU Amir", "ZIDI Redwane"
+            ],
+            TSTI2D: [
+                "AÏSSANI Ilyès", "ALLAOUA Omar", "ANAJJAR Nidal", "AOUSDI Soufiane", "BAAEV Ikhsan",
+                "BAKER Ramy", "BELALOUI Abdelghani", "BENSAHNOUNE Mohamed-Marouane", "BOUDERBALA Yassine",
+                "BOUFERCHA Shahine", "BOUOUDEN Lydia", "CELIK Eda", "CHRISTOPHE Antoine", "COMIOTTO Enzo",
+                "DUDARKAEV Israil", "EL MIR Ilyes", "FILIP Sebastian-Florin", "FINCK Mathieu",
+                "HADJ Abd Rahouf", "HARROUCH Mohamed", "IDRIS Ibrahim", "KHALID HUSSEIN Yusuf",
+                "NAÏM Samy", "OURAIS Yassine", "PEREIRA ANDRADE Ricardo", "SAHILI Iliane", "SBAÏ Yanis",
+                "SINGER Théo", "SON Philippe", "TAFAJ Edonis", "TOURE Moussa", "ÜLGÜR Umut",
+                "ULLAH Abdul-Rehman", "WALTHER Arnaud", "YOUSFI Anis"
+            ]
+        };
+
+        function displayStudents(group) {
+            const tableBody = document.getElementById("studentTableBody");
+            const groupTitle = document.getElementById("groupTitle");
+            const currentDate = document.getElementById("currentDate");
+
+            tableBody.innerHTML = "";
+            groupTitle.textContent = `Liste des élèves de ${group}`;
+            currentDate.textContent = new Date().toLocaleDateString();
+
+            students[group].forEach(student => {
+                const row = document.createElement("tr");
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = student;
+                row.appendChild(nameCell);
+
+                const noteCell = document.createElement("td");
+                const noteInput = document.createElement("input");
+                noteInput.type = "number";
+                noteInput.placeholder = "Entrez une note";
+                noteCell.appendChild(noteInput);
+                row.appendChild(noteCell);
+
+                const remarksCell = document.createElement("td");
+                const remarksInput = document.createElement("input");
+                remarksInput.type = "text";
+                remarksInput.placeholder = "Ajouter une remarque";
+                remarksCell.appendChild(remarksInput);
+                row.appendChild(remarksCell);
+
+                // Ajoute un événement de clic pour sélectionner la ligne
+                row.addEventListener("click", () => {
+                    document.querySelectorAll("tr").forEach(tr => tr.classList.remove("selected"));
+                    row.classList.add("selected");
+                });
+
+                tableBody.appendChild(row);
+            });
+
+            document.getElementById("studentTableContainer").style.display = "block";
+        }
+
+        document.getElementById("groupSelector").addEventListener("change", function () {
+            const selectedGroup = this.value;
+            if (selectedGroup) {
+                displayStudents(selectedGroup);
+            }
+        });
+
+        document.getElementById("downloadTxt").addEventListener("click", function () {
+            const rows = Array.from(document.querySelectorAll("#studentTableBody tr"));
+            let txtContent = "Nom de l'élève\tNote\tRemarques\n";
+
+            rows.forEach(row => {
+                const cols = row.querySelectorAll("td");
+                const name = cols[0].textContent;
+                const note = cols[1].querySelector("input").value || "N/A";
+                const remarks = cols[2].querySelector("input").value || "N/A";
+                txtContent += `${name}\t${note}\t${remarks}\n`;
+            });
+
+            const blob = new Blob([txtContent], { type: "text/plain;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "notes_eleves.txt";
+            link.style.display = "none";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        document.getElementById("resetNotes").addEventListener("click", function () {
+            const inputs = document.querySelectorAll("#studentTableBody input");
+            inputs.forEach(input => {
+                input.value = ""; // Réinitialise toutes les valeurs
+            });
+        });
+    </script>
+</body>
+</html>
